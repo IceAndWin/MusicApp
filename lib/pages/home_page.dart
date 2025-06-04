@@ -1,5 +1,7 @@
+
+
 import 'package:flutter/material.dart';
-import 'package:music_project/consts.dart';
+import 'package:music_project/constants.dart';
 import "package:music_project/models/song.dart";
 import 'package:music_project/widgets.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -13,40 +15,52 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<SongModel> songs = [];
-  final List<Song> songsCard = List.generate(30, (index) {
-    return Song(
-      title: "Song Title $index",
-      artist: "Artist $index",
-      imagePath: "assets/cards/music_card.png",
-      id: index,
-    );
-  });
+  List<SongModel> _songs = [];
+  final OnAudioQuery _audioQuery = OnAudioQuery();
+
   Future<void> requestStoragePermisson() async {
-    if (await Permission.audio.isGranted) {
+    Permission permisson = Permission.storage;
+    final status = await permisson.status;
+    if (status.isDenied) {
+      final result = await permisson.request();
+      if (result.isGranted) {
+        fetchSongs();
+      } else {
+        debugPrint("Permission denied");
+        if (mounted) {
+          showAppDialog(
+            context,
+            title: "Нет разрешений",
+            content: "Пожалуйста, предоставьте доступ к аудио",
+            onPressed: () {
+              openAppSettings();
+            },
+          );
+        }
+      }
+    } else if (status.isGranted) {
       fetchSongs();
     } else {
+      debugPrint("Permission is not granted");
       if (mounted) {
-        scaffoldMessenger(
-          context,
-          "Пожалуйста, предоставьте разрешение на доступ к аудио",
-        );
-        // TODO Настроики
-        // openAppSettings();
+        scaffoldMessenger(context, "Пожалуйста, предоставьте доступ к аудио");
       }
     }
   }
 
   Future<void> fetchSongs() async {
-    final OnAudioQuery audioQuery = OnAudioQuery();
-    List<SongModel> fetchedSongs = await audioQuery.querySongs(
+    List<SongModel> data = await _audioQuery.querySongs(
       sortType: SongSortType.TITLE,
       orderType: OrderType.ASC_OR_SMALLER,
       uriType: UriType.EXTERNAL,
       ignoreCase: true,
     );
     setState(() {
-      songs = fetchedSongs;
+      _songs = data;
+      if (_songs.isEmpty) {
+        debugPrint("Нет песен в вашей библиотеке");
+        scaffoldMessenger(context, "Нет песен в вашей библиотеке");
+      }
     });
   }
 
@@ -91,7 +105,7 @@ class _HomePageState extends State<HomePage> {
                     // Название сортировки
                     Expanded(
                       child: Text(
-                        'В случайном порядке', // Можно заменить на переменную для динамики
+                        'В случайном порядке',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -112,7 +126,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: 20)),
-          buildMusicCard(songsCard),
+          buildMusicCard(convertToCustomSongs(_songs)),
         ],
       ),
     );
@@ -145,6 +159,17 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  List<Song> convertToCustomSongs(List<SongModel> songs) {
+    return songs.map((model) {
+      return Song(
+        title: model.title,
+        artist: model.artist ?? "No Artist",
+        imagePath: model.uri,
+        id: model.id,
+      );
+    }).toList();
   }
 
   Widget _buildSearchBar() {

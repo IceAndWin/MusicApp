@@ -3,7 +3,7 @@
 class Song {
   final String title;
   final String artist;
-  final String imagePath;
+  final String? imagePath;
   final int id;
 
   Song({
