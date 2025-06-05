@@ -2,68 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:music_project/constants.dart';
 import 'package:music_project/models/song.dart';
 import 'package:music_project/widgets.dart';
-import 'package:provider/provider.dart';
+
 class SongsListScreen extends StatelessWidget {
   final List<Song> songs;
   const SongsListScreen({super.key, required this.songs});
   @override
   Widget build(BuildContext context) {
-    return Provider(
-      create: (context) => songs,
-      child: Scaffold(
-        backgroundColor: kBackgroundColorHomeScreen,
-        body: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 200,
-              backgroundColor: const Color.fromARGB(255, 19, 22, 42),
-              pinned: true,
-              title: _buildSearchBar(),
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(150),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 20, left: 20, bottom: 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.indigo,
-                          borderRadius: BorderRadius.circular(90),
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow,
+    return Scaffold(
+      backgroundColor: kBackgroundColorHomeScreen,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            backgroundColor: const Color.fromARGB(255, 19, 22, 42),
+            pinned: true,
+            title: _buildSearchBar(),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(150),
+              child: Container(
+                margin: const EdgeInsets.only(right: 20, left: 20, bottom: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.indigo,
+                        borderRadius: BorderRadius.circular(90),
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Название сортировки
+                    Expanded(
+                      child: Text(
+                        'В случайном порядке',
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 30,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 12),
-                      // Название сортировки
-                      Expanded(
-                        child: Text(
-                          'В случайном порядке',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.sort, color: Colors.white),
-                        onPressed: () {
-                          _buildShowModalBottomSheet(context);
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.sort, color: Colors.white),
+                      onPressed: () {
+                        _buildShowModalBottomSheet(context);
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
-            SliverToBoxAdapter(child: SizedBox(height: 20)),
-            buildMusicCard(songs),
-          ],
-        ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 20)),
+          buildMusicCard(songs),
+        ],
       ),
     );
   }
@@ -90,8 +87,6 @@ class SongsListScreen extends StatelessWidget {
       ),
     );
   }
-
-  
 
   Future<dynamic> _buildShowModalBottomSheet(BuildContext context) {
     return showModalBottomSheet(

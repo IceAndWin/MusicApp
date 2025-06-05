@@ -17,11 +17,11 @@ class FavoriteScreen extends StatefulWidget {
 
 class _FavoriteScreenState extends State<FavoriteScreen> {
   // ignore: prefer_typing_uninitialized_variables
-  late final favorites;
+  List<Song> favorites = [];
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
     _loadFavorites();
+    super.didChangeDependencies();
   }
 
   @override
@@ -46,35 +46,33 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
               : ListView.builder(
                 itemCount: favorites.length,
                 itemBuilder: (context, index) {
-                  return ChangeNotifierProvider.value(
-                    value: favorites[index],
-                    child: _buildListTile(favorites[index]),
-                  );
+                  Song song = favorites[index];
+                  return _buildListTile(song);
                 },
               ),
     );
   }
 
   Future<void> _loadFavorites() async {
-    List<Song> allSongs = Provider.of<List<Song>>(context);
+    List<Song> songs = Provider.of<List<Song>>(context, listen: false);
     List<int> favIds = await FavoriteManager.getFavorites();
     setState(() {
-      favorites = allSongs.where((song) => favIds.contains(song.id)).toList();
+      favorites = songs.where((song) => favIds.contains(song.id)).toList();
     });
   }
 
-  ListTile _buildListTile(BuildContext context) {
+  ListTile _buildListTile(Song song) {
     return ListTile(
       onTap: () {
         smoothNavigation(
           replace: false,
           context,
           AudioPlayerScreen(
-            title: Provider.of<Song>(context, listen: false).title,
-            artist: Provider.of<Song>(context, listen: false).artist,
-            imagePath: Provider.of<Song>(context, listen: false).imagePath,
-            songId: Provider.of<Song>(context, listen: false).id,
-            path: Provider.of<Song>(context, listen: false).path,
+            title: song.title,
+            artist: song.artist,
+            imagePath: song.imagePath,
+            songId: song.id,
+            path: song.path,
           ),
         );
       },
@@ -82,58 +80,45 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child:
-            (Provider.of<Song>(context, listen: false).imagePath != null &&
-                    File(
-                      Provider.of<Song>(context, listen: false).imagePath!,
-                    ).existsSync())
+            (song.imagePath != null && File(song.imagePath!).existsSync())
                 ? Image.file(
-                  File(Provider.of<Song>(context, listen: false).imagePath!),
+                  File(song.imagePath!),
                   fit: BoxFit.cover,
                   width: 50,
                   height: 50,
                 )
                 : Icon(Icons.music_note, size: 50, color: Colors.grey),
       ),
-
       title: text(
-        Provider.of<Song>(context, listen: false).title,
+        song.title,
         16,
         FontWeight.w600,
         Colors.white,
         true,
         TextAlign.start,
       ),
-
-      subtitle: Text(Provider.of<Song>(context, listen: false).artist),
+      subtitle: Text(song.artist),
       trailing: showSongMenu(
         context,
         text1: 'Добавить в очередь',
         text2: 'Добавить в избранное',
-        text3: 'Удалить',
+        text3: 'Удалить из избранного',
         onTap1: () {},
-        onTap2: () {},
+        onTap2: () async {
+          await FavoriteManager.addFavorite(song.id);
+          await _loadFavorites();
+        },
         onTap3: () {
           showAppDialog(
             context,
             title: "Удалить песню",
             content: "Вы уверены, что хотите удалить эту песню?",
             onPressed: () {
-              //   try {
-              //     File file = File(path);
-              //     if (file.existsSync()) {
-              //       await file.delete();
-              //       scaffoldMessenger(context, "Песня удалена");
-              //     } else {
-              //       debugPrint("Файл не найден: ${path}");
-              //     }
-              //   } catch (e) {
-              //     debugPrint("Файл не найден: ${path}");
-              //     debugPrint("Ошибка при удалении песни: $e");
-              //     scaffoldMessenger(context, "Ошибка при удалении песни");
-              //   } finally {
-              //     Navigator.of(context).pop();
-              //   }
-              // },
+              FavoriteManager.removeFavorite(song.id);
+              Navigator.pop(context);
+              setState(() {
+                favorites.removeWhere((favSong) => favSong.id == song.id);
+              });
             },
           );
         },

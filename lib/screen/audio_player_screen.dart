@@ -10,7 +10,6 @@ import "package:music_project/models/favorite_manager.dart";
 import "package:music_project/models/song.dart";
 import "package:music_project/widgets.dart";
 import "package:audioplayers/audioplayers.dart";
-import "package:provider/provider.dart";
 
 class AudioPlayerScreen extends StatefulWidget {
   final String? title;
@@ -54,15 +53,13 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     super.initState();
     _initAudioPlayer();
     _imageLoaded();
+    _checkIsLiked();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        Provider(create: (_) => song)
-      ],
-      child: Scaffold(
+    return 
+      Scaffold(
         backgroundColor: kBackgroundColorAudioPlayer,
         appBar: AppBar(
           leading: IconButton(
@@ -277,8 +274,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _initAudioPlayer() async {
@@ -315,6 +311,13 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
 
   Future<void> _pause() async {
     await audioPlayer.pause();
+  }
+
+  Future<void> _checkIsLiked() async {
+    final favorites = await FavoriteManager.getFavorites();
+    setState(() {
+      isLiked = favorites.contains(widget.songId);
+    });
   }
 
   GestureDetector _likeAnimation() {

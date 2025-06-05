@@ -17,6 +17,7 @@ Widget buildMusicCard(List<Song> songs) {
       index,
     ) {
       final song = songs[index % songs.length];
+      debugPrint("${song.id}");
       return ListTile(
         onTap: () {
           smoothNavigation(

@@ -7,6 +7,7 @@ import 'package:music_project/screen/songs_list_screen.dart';
 import 'package:music_project/widgets.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -59,18 +60,21 @@ class _HomePageState extends State<HomePage> {
       uriType: UriType.EXTERNAL,
       ignoreCase: true,
     );
-    List<SongModel> filteredSongs = data.where((element) {
-      return !(element.data.toString().toLowerCase().endsWith(".ogg"));
-    },).toList();
+    List<SongModel> filteredSongs =
+        data.where((element) {
+          return !(element.data.toString().toLowerCase().endsWith(".ogg"));
+        }).toList();
     setState(() {
       _songs = filteredSongs;
       if (_songs.isEmpty) {
         scaffoldMessenger(context, "Нет песен в вашей библиотеке");
+        return;
       }
       _pages.add(SongsListScreen(songs: convertToCustomSongs(_songs)));
-      _pages.add( FavoriteScreen());
+      _pages.add(FavoriteScreen());
     });
   }
+
   List<Song> convertToCustomSongs(List<SongModel> songs) {
     return songs.map((model) {
       return Song(
@@ -78,10 +82,11 @@ class _HomePageState extends State<HomePage> {
         artist: model.artist ?? "Неизвестный исполнитель",
         imagePath: model.uri,
         id: model.id,
-        path: model.data
+        path: model.data,
       );
     }).toList();
   }
+
   @override
   void initState() {
     requestStoragePermisson();
@@ -90,41 +95,44 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackgroundColorHomeScreen,
-      body:
-          _pages.isNotEmpty
-              ? _pages[_currentIndex]
-              : Center(child: CircularProgressIndicator()),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedLabelStyle: TextStyle(color: Colors.white),
-        unselectedLabelStyle: TextStyle(color: Colors.white),
-        unselectedItemColor: Colors.white,
-        selectedItemColor: Colors.red,
-        selectedIconTheme: IconThemeData(color: Colors.red),
+    return Provider(
+      create: (context) => convertToCustomSongs(_songs),
+      child: Scaffold(
         backgroundColor: kBackgroundColorHomeScreen,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        currentIndex: _currentIndex,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.music_note,
-              color: _currentIndex == 0 ? Colors.red : Colors.white,
+        body:
+            _pages.isNotEmpty
+                ? _pages[_currentIndex]
+                : Center(child: CircularProgressIndicator()),
+        bottomNavigationBar: BottomNavigationBar(
+          selectedLabelStyle: TextStyle(color: Colors.white),
+          unselectedLabelStyle: TextStyle(color: Colors.white),
+          unselectedItemColor: Colors.white,
+          selectedItemColor: Colors.red,
+          selectedIconTheme: IconThemeData(color: Colors.red),
+          backgroundColor: kBackgroundColorHomeScreen,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          currentIndex: _currentIndex,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.music_note,
+                color: _currentIndex == 0 ? Colors.red : Colors.white,
+              ),
+              label: "Главная",
             ),
-            label: "Главная",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.favorite,
-              color: _currentIndex == 1 ? Colors.red : Colors.white,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.favorite,
+                color: _currentIndex == 1 ? Colors.red : Colors.white,
+              ),
+              label: "Избранное",
             ),
-            label: "Избранное",
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
