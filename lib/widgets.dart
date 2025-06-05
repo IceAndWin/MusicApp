@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:music_project/pages/audio_player_screen.dart';
+import 'package:music_project/screen/audio_player_screen.dart';
 import "models/song.dart";
 
 // SCAFFOLD MESSENGER
@@ -27,6 +27,7 @@ Widget buildMusicCard(List<Song> songs) {
               artist: song.artist,
               imagePath: song.imagePath,
               songId: song.id,
+              path: song.path,
             ),
           );
         },
@@ -54,28 +55,60 @@ Widget buildMusicCard(List<Song> songs) {
         ),
 
         subtitle: Text(song.artist),
-        trailing: showSongMenu(songs, context),
+        trailing: showSongMenu(
+          context,
+          text1: 'Добавить в очередь',
+          text2: 'Добавить в избранное',
+          text3: 'Удалить',
+          onTap1: () {},
+          onTap2: () {},
+          onTap3: () {
+            showAppDialog(
+              context,
+              title: "Удалить песню",
+              content: "Вы уверены, что хотите удалить эту песню?",
+              onPressed: () async {
+                try {
+                  File file = File(song.path);
+                  if (file.existsSync()) {
+                    await file.delete();
+                    scaffoldMessenger(context, "Песня удалена");
+                  }
+                  else {
+                    debugPrint("Файл не найден: ${song.path}");
+                  }
+                } catch (e) {
+                    debugPrint("Файл не найден: ${song.path}");
+                  debugPrint("Ошибка при удалении песни: $e");
+                  scaffoldMessenger(context, "Ошибка при удалении песни");
+                } finally {
+                  Navigator.of(context).pop();
+                }
+              },
+            );
+          },
+        ),
       );
     }),
   );
 }
 
 // MENU
-PopupMenuButton showSongMenu(List<Song> songs, BuildContext context) {
+PopupMenuButton showSongMenu(
+  BuildContext context, {
+  required String text1,
+  required String text2,
+  required String text3,
+  required void Function() onTap1,
+  required void Function() onTap2,
+  required void Function() onTap3,
+}) {
   return PopupMenuButton(
     itemBuilder: (context) {
       return [
-        PopupMenuItem(
-          value: 0,
-          child: Text('Добавить в очередь'),
-          onTap: () {},
-        ),
-        PopupMenuItem(
-          value: 1,
-          child: Text('Добавить в избранное'),
-          onTap: () {},
-        ),
-        PopupMenuItem(value: 2, child: Text('Удалить'), onTap: () {}),
+        PopupMenuItem(value: 0, onTap: onTap1, child: Text(text1)),
+        PopupMenuItem(value: 1, onTap: onTap2, child: Text(text2)),
+        PopupMenuItem(value: 2, onTap: onTap3, child: Text(text3)),
       ];
     },
   );

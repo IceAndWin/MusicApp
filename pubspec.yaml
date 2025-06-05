@@ -39,6 +39,8 @@ dependencies:
   permission_handler: ^12.0.0+1
   on_audio_query: ^2.9.0
   animations: ^2.0.11
+  provider: ^6.1.5
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
