@@ -1,4 +1,5 @@
 # music_project
+![ScreenShot](https://github.com/IceAndWin/MusicApp/blob/main/Screenshot_2025-06-28-18-36-45-835_com.example.music_project.jpg)
 
 A new Flutter project.
 
